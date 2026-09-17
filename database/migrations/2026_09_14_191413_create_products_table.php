@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('store_id')->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('supplier_id')->nullable();
+            $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null');
+            $table->boolean('is_consignment')->default(false);
             $table->string('name');
             $table->string('image')->nullable();
-            $table->enum('unit_type', ['gram', 'pcs', 'bucket'])->default('pcs');
-            $table->decimal('buy_price', 12, 2)->default(0); // HPP / Modal
-            $table->decimal('sell_price', 12, 2)->default(0); // Harga Jual
-            $table->decimal('stock', 12, 2)->default(0);
+            $table->enum('unit_type', ['pcs', 'gram', 'bucket'])->default('pcs');
             $table->timestamps();
         });
     }

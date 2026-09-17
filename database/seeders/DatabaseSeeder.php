@@ -2,102 +2,113 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\PriceTier;
 use App\Models\Product;
+use App\Models\ProductBatch;
+use App\Models\Store;
 use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Kategori Utama (Markasnack & Glytch)
-        $catRegular = Category::create(['name' => 'Markasnack (Regular)']);
-        $catPremium = Category::create(['name' => 'Markasnack (Premium)']);
-        $catCincin  = Category::create(['name' => 'Glytch - Cincin']);
-        $catKalung  = Category::create(['name' => 'Glytch - Kalung']);
-        $catGelang  = Category::create(['name' => 'Glytch - Gelang']);
-        Category::create(['name' => 'Glytch - Keychain']);
-        Category::create(['name' => 'Glytch - Piercing']);
-        Category::create(['name' => 'Glytch - Bandana']);
+        // 1. Buat Akun Admin
+        User::factory()->create([
+            'name' => 'Admin POS',
+            'email' => 'admin@pos.com',
+        ]);
 
-        // 2. Tier Harga Markasnack (Regular)
+        // 2. Buat Toko Utama
+        $storeMarkas = Store::create([
+            'name' => 'Markasnack',
+            'slug' => 'markasnack',
+            'description' => 'Toko cemilan prasmanan & gramasi',
+        ]);
+
+        $storeGlytch = Store::create([
+            'name' => 'Glytch',
+            'slug' => 'glytch',
+            'description' => 'Toko aksesoris, gelang, & fashion',
+        ]);
+
+        // 3. Buat Kategori Per Toko
+        $catRegular = Category::create(['store_id' => $storeMarkas->id, 'name' => 'Regular']);
+        $catPremium = Category::create(['store_id' => $storeMarkas->id, 'name' => 'Premium']);
+
+        $catCincin  = Category::create(['store_id' => $storeGlytch->id, 'name' => 'Cincin']);
+        $catKalung  = Category::create(['store_id' => $storeGlytch->id, 'name' => 'Kalung']);
+        $catGelang  = Category::create(['store_id' => $storeGlytch->id, 'name' => 'Gelang']);
+        Category::create(['store_id' => $storeGlytch->id, 'name' => 'Keychain']);
+
+        // 4. Tier Harga Markasnack (Regular & Premium)
         $regularTiers = [
             ['min_gram' => 50, 'tier_price' => 6000],
             ['min_gram' => 100, 'tier_price' => 10000],
             ['min_gram' => 200, 'tier_price' => 20000],
-            ['min_gram' => 250, 'tier_price' => 22000],
             ['min_gram' => 500, 'tier_price' => 40000],
-            ['min_gram' => 1000, 'tier_price' => 75000],
         ];
         foreach ($regularTiers as $tier) {
             PriceTier::create(array_merge($tier, ['group_type' => 'regular']));
         }
 
-        // 3. Tier Harga Markasnack (Premium)
-        $premiumTiers = [
-            ['min_gram' => 50, 'tier_price' => 7000],
-            ['min_gram' => 100, 'tier_price' => 13000],
-            ['min_gram' => 200, 'tier_price' => 25000],
-            ['min_gram' => 250, 'tier_price' => 30000],
-            ['min_gram' => 500, 'tier_price' => 58000],
-            ['min_gram' => 1000, 'tier_price' => 108000],
-        ];
-        foreach ($premiumTiers as $tier) {
-            PriceTier::create(array_merge($tier, ['group_type' => 'premium']));
-        }
-
-        // 4. Data Supplier UMKM
+        // 5. Data Supplier UMKM
         $supplierUmkm = Supplier::create([
             'name' => 'Kripik Ibu Astuti (UMKM)',
             'phone' => '08123456789',
             'address' => 'Banjarbaru',
         ]);
 
-        // 5. Sample Produk Markasnack (Timbangan)
-        Product::create([
+        // 6. Produk & Batch Stok (Markasnack)
+        $p1 = Product::create([
+            'store_id' => $storeMarkas->id,
             'category_id' => $catRegular->id,
             'name' => 'Keripik Singkong Balado',
             'unit_type' => 'gram',
-            'buy_price' => 0,
-            'sell_price' => 0,
-            'stock' => 10000, // 10.000 gram (10 kg)
-            'is_consignment' => false,
+        ]);
+        ProductBatch::create([
+            'product_id' => $p1->id,
+            'batch_code' => 'BATCH-001',
+            'buy_price' => 45000, // Modal per kg
+            'sell_price' => 0,    // Mengikuti PriceTier
+            'initial_stock' => 10000,
+            'current_stock' => 10000,
         ]);
 
-        // 6. Sample Produk Markasnack Non-Timbangan (Kemasan)
-        Product::create([
-            'category_id' => $catRegular->id,
-            'name' => 'Minuman Es Teh Solo',
-            'unit_type' => 'pcs',
-            'buy_price' => 1500,
-            'sell_price' => 5000,
-            'stock' => 50,
-            'is_consignment' => false,
-        ]);
-
-        // 7. Sample Produk Titipan UMKM (Konsinyasi)
-        Product::create([
+        // 7. Produk Titipan UMKM (Konsinyasi)
+        $p2 = Product::create([
+            'store_id' => $storeMarkas->id,
             'category_id' => $catRegular->id,
             'supplier_id' => $supplierUmkm->id,
             'name' => 'Keripik Pisang Lumer (UMKM)',
             'unit_type' => 'pcs',
-            'buy_price' => 10000, // Setoran bersih ke UMKM
-            'sell_price' => 13000, // Harga jual toko
-            'stock' => 20,
             'is_consignment' => true,
         ]);
+        ProductBatch::create([
+            'product_id' => $p2->id,
+            'batch_code' => 'BATCH-UMKM-01',
+            'buy_price' => 10000, // Setoran ke UMKM
+            'sell_price' => 13000, // Harga Jual
+            'initial_stock' => 20,
+            'current_stock' => 20,
+        ]);
 
-        // 8. Sample Produk Glytch (Retail Pcs)
-        Product::create([
+        // 8. Produk Glytch (Retail Pcs)
+        $p3 = Product::create([
+            'store_id' => $storeGlytch->id,
             'category_id' => $catCincin->id,
             'name' => 'Cincin Titanium Dark Cyber',
             'unit_type' => 'pcs',
-            'buy_price' => 15000,
+        ]);
+        ProductBatch::create([
+            'product_id' => $p3->id,
+            'batch_code' => 'BATCH-GLY-01',
+            'buy_price' => 15000, // HPP Batch 1
             'sell_price' => 45000,
-            'stock' => 15,
-            'is_consignment' => false,
+            'initial_stock' => 15,
+            'current_stock' => 15,
         ]);
     }
 }

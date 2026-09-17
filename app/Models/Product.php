@@ -2,24 +2,31 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
 
-    protected $fillable = [
-        'category_id',
-        'name',
-        'buy_price',
-        'sell_price',
-        'stock',
-    ];
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
+    }
 
-    // Tambahkan fungsi relasi ke Category
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function supplier(): BelongsTo // <-- Tambahkan method relasi ini
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ProductBatch::class);
     }
 }
