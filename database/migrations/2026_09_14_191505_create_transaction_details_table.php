@@ -10,18 +10,20 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('transaction_details', function (Blueprint $table) {
-        $table->id();
-        $table->unsignedBigInteger('transaction_id');
-        $table->unsignedBigInteger('product_id');
-        $table->integer('qty_pcs')->nullable();
-        $table->decimal('weight_actual_gram', 12, 2)->nullable();
-        $table->string('tier_applied')->nullable();
-        $table->decimal('subtotal', 12, 2);
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('transaction_details', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
+            $table->foreignId('store_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_batch_id')->nullable()->constrained()->onDelete('set null');
+            $table->decimal('quantity', 10, 2); // Jumlah pcs atau gramasi
+            $table->decimal('buy_price', 15, 2); // HPP Beli Modal FIFO batch saat itu
+            $table->decimal('sell_price', 15, 2); // Harga jual unit/gram
+            $table->decimal('subtotal', 15, 2);
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

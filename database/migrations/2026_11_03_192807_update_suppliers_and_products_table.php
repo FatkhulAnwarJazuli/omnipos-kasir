@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('suppliers', function (Blueprint $table) {
+            if (Schema::hasColumn('suppliers', 'address')) {
+                $table->dropColumn('address');
+            }
+            $table->text('supplied_items')->nullable()->after('phone');
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            if (!Schema::hasColumn('products', 'supplier_id')) {
+                $table->foreignId('supplier_id')->nullable()->constrained()->nullOnDelete()->after('category_id');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('suppliers', function (Blueprint $table) {
+            $table->dropColumn('supplied_items');
+            $table->text('address')->nullable();
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropForeign(['supplier_id']);
+            $table->dropColumn('supplier_id');
+        });
+    }
+};

@@ -10,6 +10,10 @@ class Product extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'price_templates' => 'array',
+    ];
+
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
@@ -20,7 +24,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function supplier(): BelongsTo // <-- Tambahkan method relasi ini
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
     }
@@ -28,5 +32,10 @@ class Product extends Model
     public function batches(): HasMany
     {
         return $this->hasMany(ProductBatch::class);
+    }
+
+    public function stockOpnames(): HasMany
+    {
+        return $this->hasMany(StockOpname::class);
     }
 }

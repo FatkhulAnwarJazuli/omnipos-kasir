@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_code')->unique();
-            $table->integer('total_amount');
-            $table->enum('payment_method', ['cash', 'qris']);
+            $table->string('invoice_number')->unique();
+            $table->decimal('total_amount', 15, 2);
+            $table->decimal('pay_amount', 15, 2);
+            $table->decimal('change_amount', 15, 2);
+            $table->enum('payment_method', ['cash', 'qris', 'transfer']);
             $table->timestamps();
         });
     }

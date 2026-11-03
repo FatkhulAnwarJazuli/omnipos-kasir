@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Store;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class StoreController extends Controller
 {
@@ -16,45 +17,46 @@ class StoreController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            'logo'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        $request->validate([
+            'name' => 'required|string|max:255',
         ]);
 
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('stores', 'public');
+        $store = new Store();
+        $store->name = $request->name;
+        
+        // Otomatis isi slug dan code jika kolomnya ada di database
+        if (Schema::hasColumn('stores', 'slug')) {
+            $store->slug = Str::slug($request->name) . '-' . rand(100, 999);
         }
 
-        Store::create($validated);
+        if (Schema::hasColumn('stores', 'code')) {
+            $store->code = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $request->name), 0, 3)) . rand(10, 99);
+        }
 
-        return redirect()->route('stores.index')->with('success', 'Toko berhasil ditambahkan!');
+        $store->save();
+
+        return redirect()->route('stores.index')->with('success', 'Toko baru berhasil ditambahkan!');
     }
 
     public function update(Request $request, Store $store)
     {
-        $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            'logo'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        $request->validate([
+            'name' => 'required|string|max:255',
         ]);
 
-        if ($request->hasFile('logo')) {
-            if ($store->logo && Storage::disk('public')->exists($store->logo)) {
-                Storage::disk('public')->delete($store->logo);
-            }
-            $validated['logo'] = $request->file('logo')->store('stores', 'public');
+        $store->name = $request->name;
+
+        if (Schema::hasColumn('stores', 'slug')) {
+            $store->slug = Str::slug($request->name);
         }
 
-        $store->update($validated);
+        $store->save();
 
         return redirect()->route('stores.index')->with('success', 'Data toko berhasil diperbarui!');
     }
 
     public function destroy(Store $store)
     {
-        if ($store->logo && Storage::disk('public')->exists($store->logo)) {
-            Storage::disk('public')->delete($store->logo);
-        }
-
         $store->delete();
         return redirect()->route('stores.index')->with('success', 'Toko berhasil dihapus!');
     }
